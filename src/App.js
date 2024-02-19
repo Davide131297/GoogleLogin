@@ -1,44 +1,32 @@
-import React, { useState } from "react";
-import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import "./App.css";
+import { useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
 
-  const onSuccess = (response) => {
-    console.log(response);
-    setIsLoggedIn(true);
-    setUserInfo(response.profileObj);
-  };
+  function handleCallBackResponse(response) {
+    console.log("Encoded JWT ID token: " + response.credential);
+    const userObject = jwtDecode(response.credential);
+    console.log(userObject);
+  }
 
-  const onFailure = (error) => {
-    console.log("Login fehlgeschlagen:", error);
-  };
+  useEffect(() => {
+    /* global google */
+    google.accounts.id.initialize({
+    client_id: "692201261838-l5ue14kognhskj8j6vf8s4t3ok740ne9.apps.googleusercontent.com",
+    callback: handleCallBackResponse
+    });
 
-  const onLogout = () => {
-    setIsLoggedIn(false);
-    setUserInfo(null);
-  };
+    google.accounts.id.renderButton(
+      document.getElementById("signInDiv"),
+      { theme: "outline", size: "large", text: "signIn"}
+    );
+  }, []);
 
   return (
-    <GoogleOAuthProvider clientId="692201261838-l5ue14kognhskj8j6vf8s4t3ok740ne9.apps.googleusercontent.com">
-      <div>
-        <h1>Anmeldung mit Google</h1>
-        {isLoggedIn && userInfo ? (
-          <div>
-            <p>Angemeldet als {userInfo.name}</p>
-            <p>Email: {userInfo.email}</p>
-            <button onClick={onLogout}>Abmelden</button>
-          </div>
-        ) : (
-          <GoogleLogin
-            buttonText="Mit Google anmelden"
-            onSuccess={onSuccess}
-            onFailure={onFailure}
-          />
-        )}
-      </div>
-    </GoogleOAuthProvider>
+    <div className="App">
+      <div id="signInDiv"></div>
+    </div>
   );
 };
 
