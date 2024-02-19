@@ -1,13 +1,18 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 
 const App = () => {
+
+  const [user, setUser] = useState({});
+  const [visible, setVisible] = useState(true);
 
   function handleCallBackResponse(response) {
     console.log("Encoded JWT ID token: " + response.credential);
     const userObject = jwtDecode(response.credential);
     console.log(userObject);
+    setUser(userObject.given_name);
+    setVisible(false);
   }
 
   useEffect(() => {
@@ -25,7 +30,8 @@ const App = () => {
 
   return (
     <div className="App">
-      <div id="signInDiv"></div>
+      {visible && <div id="signInDiv"></div>}
+      {!visible && <h1>Erfolgreich Angemeldet, {user}!</h1>}
     </div>
   );
 };
