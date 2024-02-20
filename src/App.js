@@ -1,24 +1,25 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import DropdownButton from "react-bootstrap/DropdownButton";
-import Dropdown from "react-bootstrap/Dropdown";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "./Config";
+import MicrosoftLogo from "./MicrosoftLogin.png";
 
 const App = () => {
 
   const [user, setUser] = useState({}); //Google
-  const [visible, setVisible] = useState(true); //Google
+  const [visibleGoogle, setVisibleGoogle] = useState(true); //Google
+  const [MicrosoftUser, setMicrosoftUser] = useState({}); //Microsoft
+  const [visibleMicrosoft, setVisibleMicrosoft] = useState(true); //Microsoft
   const { instance } = useMsal(); //Microsoft
 
   //Anmelden bei Google
   function handleCallBackResponse(response) {
-    console.log("Encoded JWT ID token: " + response.credential);
-    const userObject = jwtDecode(response.credential);
-    console.log(userObject);
-    setUser(userObject.given_name);
-    setVisible(false);
+    console.log("Google Token: " + response.credential);
+    const GoogleUser = jwtDecode(response.credential);
+    console.log(GoogleUser);
+    setUser(GoogleUser.given_name);
+    setVisibleGoogle(false);
   }
 
   useEffect(() => {
@@ -35,38 +36,31 @@ const App = () => {
   }, []);
 
   //Anmelden bei Microsoft
-  const handleLogin = (loginType) => {
-    if (loginType === "popup") {
-      instance.loginPopup(loginRequest).catch((e) => {
-        console.log(e);
-      });
-    } else if (loginType === "redirect") {
-      instance.loginRedirect(loginRequest).catch((e) => {
-        console.log(e);
-      });
-    }
+  const handleLogin = () => {
+    instance.loginPopup(loginRequest).then((response) => {
+      // Hier erhältst du den Access Token
+      console.log("Microsoft Token:", response.accessToken);
+      const MicrosoftUser = jwtDecode(response.accessToken);
+      console.log(MicrosoftUser);
+      setMicrosoftUser(MicrosoftUser);
+      setVisibleMicrosoft(false);
+    }).catch((e) => {
+      console.log(e);
+    });
+    setVisibleMicrosoft(false);
   };
 
   return (
     <div className="App">
       <div className="Google Login">
-        {visible && <div id="signInDiv"></div>}
-        {!visible && <h1>Erfolgreich bei Google Angemeldet, {user}!</h1>}
+        {visibleGoogle && <div id="signInDiv"></div>}
+        {!visibleGoogle && <h1>Erfolgreich bei Google Angemeldet, {user}!</h1>}
       </div>
       <div className="Microsoft Login">
-        <DropdownButton
-          variant="secondary"
-          className="ml-auto"
-          drop="start"
-          title="Sign In"
-        >
-          <Dropdown.Item as="button" onClick={() => handleLogin("popup")}>
-            Sign in using Popup
-          </Dropdown.Item>
-          <Dropdown.Item as="button" onClick={() => handleLogin("redirect")}>
-            Sign in using Redirect
-          </Dropdown.Item>
-        </DropdownButton>
+        <div id="MicrosoftButton">
+          {visibleMicrosoft && <img src={MicrosoftLogo} alt="Microsoft Login" onClick={handleLogin} /> }
+        </div>
+        {!visibleMicrosoft && <h1>Erfolgreich bei Microsoft Angemeldet, {MicrosoftUser.given_name}!</h1>}
       </div>
     </div>
   );
